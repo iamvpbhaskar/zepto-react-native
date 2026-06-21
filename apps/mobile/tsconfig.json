@@ -1,0 +1,25 @@
+{
+  "extends": "./node_modules/expo/tsconfig.base",
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "react-native",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "strict": true,
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@zepto/types": ["../../packages/types/src/index.ts"],
+      "@zepto/utils": ["../../packages/utils/src/index.ts"],
+      "@zepto/config": ["../../packages/config/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "app/**/*", "src/types/**/*.d.ts"],
+  "exclude": ["node_modules"]
+}

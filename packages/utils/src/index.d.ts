@@ -1,0 +1,20 @@
+import type { CartItem, CartSummary } from '@zepto/types';
+export declare function formatCurrency(amount: number): string;
+export declare function formatDate(date: string | Date): string;
+export declare function formatDateShort(date: string | Date): string;
+export declare function timeAgo(date: string | Date): string;
+export declare function calcSubtotal(items: CartItem[]): number;
+export declare function calcDeliveryFee(subtotal: number): number;
+export declare function calcDiscount(couponType: 'FLAT' | 'PERCENT', couponValue: number, subtotal: number, maxDiscount?: number): number;
+export declare function calcCartSummary(items: CartItem[], couponDiscount?: number): CartSummary;
+export declare function calcDiscountPercent(mrp: number, price: number): number;
+export declare function generateSlug(name: string): string;
+export declare function generateOrderNumber(): string;
+export declare function isValidPhone(phone: string): boolean;
+export declare function isValidPincode(pincode: string): boolean;
+export declare function getPaginationMeta(total: number, page: number, limit: number): {
+    total: number;
+    page: number;
+    totalPages: number;
+    hasMore: boolean;
+};

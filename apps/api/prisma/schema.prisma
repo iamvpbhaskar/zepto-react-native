@@ -1,0 +1,325 @@
+// generator client
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  WALLET
+  COD
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+// ─── MODELS ──────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  email        String?  @unique
+  name         String?
+  avatarUrl    String?
+  role         Role     @default(CUSTOMER)
+  isVerified   Boolean  @default(false)
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses      Address[]
+  orders         Order[]
+  cart           Cart?
+  wallet         Wallet?
+  notifications  Notification[]
+  recentlyViewed RecentlyViewed[]
+
+  @@map("users")
+}
+
+model Address {
+  id        String      @id @default(uuid())
+  userId    String
+  label     String
+  type      AddressType @default(HOME)
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  landmark  String?
+  lat       Float?
+  lng       Float?
+  isDefault Boolean     @default(false)
+  isDeleted Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  imageUrl    String?
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  categoryId  String
+  name        String
+  slug        String   @unique
+  description String?
+  images      String[]
+  mrp         Decimal  @db.Decimal(10, 2)
+  price       Decimal  @db.Decimal(10, 2)
+  unit        String
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  tags        String[]
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category       Category         @relation(fields: [categoryId], references: [id])
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  recentlyViewed RecentlyViewed[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive, isFeatured])
+  @@map("products")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  orderNumber   String        @unique
+  userId        String
+  addressId     String
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  subtotal      Decimal       @db.Decimal(10, 2)
+  deliveryFee   Decimal       @db.Decimal(10, 2) @default(0)
+  discount      Decimal       @db.Decimal(10, 2) @default(0)
+  total         Decimal       @db.Decimal(10, 2)
+  couponCode    String?
+  notes         String?
+  estimatedAt   DateTime?
+  deliveredAt   DateTime?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id])
+  address           Address            @relation(fields: [addressId], references: [id])
+  items             OrderItem[]
+  timeline          OrderTimeline[]
+  walletTransaction WalletTransaction?
+
+  @@index([userId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  productId    String
+  productName  String
+  productImage String?
+  unit         String
+  quantity     Int
+  mrp          Decimal @db.Decimal(10, 2)
+  price        Decimal @db.Decimal(10, 2)
+  total        Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model OrderTimeline {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  message   String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_timeline")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Decimal  @db.Decimal(10, 2) @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id            String            @id @default(uuid())
+  walletId      String
+  orderId       String?           @unique
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  amount        Decimal           @db.Decimal(10, 2)
+  balanceBefore Decimal           @db.Decimal(10, 2)
+  balanceAfter  Decimal           @db.Decimal(10, 2)
+  description   String
+  reference     String?
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+  order  Order? @relation(fields: [orderId], references: [id])
+
+  @@index([walletId])
+  @@map("wallet_transactions")
+}
+
+model Banner {
+  id        String    @id @default(uuid())
+  title     String
+  imageUrl  String
+  deepLink  String?
+  isActive  Boolean   @default(true)
+  sortOrder Int       @default(0)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("banners")
+}
+
+model Coupon {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  description   String
+  discountType  String
+  discountValue Decimal  @db.Decimal(10, 2)
+  minOrderValue Decimal  @db.Decimal(10, 2) @default(0)
+  maxDiscount   Decimal? @db.Decimal(10, 2)
+  usageLimit    Int?
+  usedCount     Int      @default(0)
+  isActive      Boolean  @default(true)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  @@map("coupons")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  type      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model RecentlyViewed {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("recently_viewed")
+}

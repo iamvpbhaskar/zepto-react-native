@@ -23,7 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#3b0764"
       },
-      "package": "com.zepto.app"
+      "package": "com.vpbhaskar.zepto"
     },
     "plugins": [
       "expo-router",
@@ -38,7 +38,10 @@
     ],
     "scheme": "zepto",
     "extra": {
-      "apiUrl": "http://localhost:3001/api/v1"
+      "apiUrl": "http://localhost:3001/api/v1",
+      "eas": {
+        "projectId": "44170767-8560-4f9b-9498-6955de94b9f5"
+      }
     }
   }
 }

@@ -21,7 +21,7 @@ export async function syncMockDeliveryStatus() {
     
     if (testUsers.length === 0) return
 
-    const testUserIds = testUsers.map(u => u.id)
+    const testUserIds = testUsers.map((u: any) => u.id)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
 
     const pendingOrders = await prisma.order.findMany({
@@ -33,7 +33,7 @@ export async function syncMockDeliveryStatus() {
     })
 
     for (const order of pendingOrders) {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         const currentOrder = await tx.order.findUnique({
           where: { id: order.id },
           select: { status: true },

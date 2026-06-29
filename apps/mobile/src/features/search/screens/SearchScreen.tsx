@@ -78,10 +78,30 @@ export default function SearchScreen() {
 
       {/* Results */}
       {debouncedQuery.length < 2 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyTitle}>Search for groceries</Text>
-          <Text style={styles.emptySubtitle}>Try "milk", "fruits", "snacks"</Text>
+        <View style={styles.emptyStateContainer}>
+          <View style={styles.suggestionsContainer}>
+            <Text style={styles.suggestionsTitle}>Popular Searches</Text>
+            <View style={styles.chipsRow}>
+              {['Milk', 'Fruits', 'Snacks', 'Rice', 'Paneer', 'Cookies', 'Beverages'].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={styles.chip}
+                  onPress={() => {
+                    setQuery(item)
+                    setDebouncedQuery(item)
+                  }}
+                >
+                  <Search size={14} color={colors.textSecondary} style={{ marginRight: 6 }} />
+                  <Text style={styles.chipText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>🔍</Text>
+            <Text style={styles.emptyTitle}>Search for groceries</Text>
+            <Text style={styles.emptySubtitle}>Start typing to find products instantly</Text>
+          </View>
         </View>
       ) : isFetching ? (
         <View style={styles.loadingState}>
@@ -120,7 +140,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 4 },
   searchBox: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: colors.surfaceSecondary,
+    backgroundColor: '#F5F5F5',
     borderRadius: radius.full,
     paddingHorizontal: 14, paddingVertical: 10,
   },
@@ -145,4 +165,39 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 52 },
   emptyTitle: { fontSize: fontSize.lg, fontWeight: '600', color: colors.text },
   emptySubtitle: { fontSize: fontSize.sm, color: colors.textMuted },
+  emptyStateContainer: {
+    flex: 1,
+  },
+  suggestionsContainer: {
+    padding: spacing.base,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  suggestionsTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.md,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  chipText: {
+    fontSize: fontSize.xs + 1,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
 })

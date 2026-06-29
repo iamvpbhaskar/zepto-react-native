@@ -12,7 +12,7 @@ export const colors = {
 
   background: '#F5F6F8',    // Light gray background
   surface: '#FFFFFF',
-  surfaceSecondary: '#F8EAF2', // Light pinkish/purple surface for badges
+  surfaceSecondary: '#F5F5F5', // Light gray surface for badges
   border: '#E2E8F0',
 
   text: '#1C1C1C',

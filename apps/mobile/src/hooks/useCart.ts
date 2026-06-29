@@ -21,7 +21,7 @@ export function useCart() {
       setCart(cart.items ?? [], summary)
       return res.data.data
     },
-    staleTime: 1000 * 30, // 30s
+    staleTime: 1000 * 120, // 120s
   })
 }
 
@@ -68,7 +68,6 @@ export function useAddToCart() {
 
     onSettled: (data) => {
       if (data) setCart(data.cart.items, data.summary)
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
   })
 }
@@ -94,7 +93,6 @@ export function useUpdateCartItem() {
 
     onSettled: (data) => {
       if (data) setCart(data.cart.items, data.summary)
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
   })
 }
@@ -120,7 +118,6 @@ export function useRemoveCartItem() {
 
     onSettled: (data) => {
       if (data) setCart(data.cart.items, data.summary)
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
   })
 }

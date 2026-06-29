@@ -15,6 +15,7 @@ import { ProductCard } from '../components/ProductCard'
 import { colors, fontSize, spacing, radius, shadow } from '../../../theme'
 import { ChevronLeft, Search, Share, Star, Heart, ChevronRight, RotateCcw, Zap, ShoppingCart, Plus, Minus } from 'lucide-react-native'
 import Toast from 'react-native-toast-message'
+import { LinearGradient } from 'expo-linear-gradient'
 
 const { width } = Dimensions.get('window')
 
@@ -75,12 +76,15 @@ export default function ProductDetailScreen() {
           <Image 
             source={{ uri: product.images[0] ?? 'https://picsum.photos/400/400' }}
             style={StyleSheet.absoluteFill}
-            blurRadius={20}
+            blurRadius={15}
           />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+          <LinearGradient
+            colors={['rgba(255,255,255,0.1)', 'rgba(255,255,255,0.6)', '#fff']}
+            style={StyleSheet.absoluteFill}
+          />
 
           {/* Floating Header Actions */}
-          <SafeAreaView>
+          <SafeAreaView style={styles.absoluteHeader}>
             <View style={styles.header}>
               <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()}>
                 <ChevronLeft size={24} color="#000" />
@@ -168,13 +172,13 @@ export default function ProductDetailScreen() {
 
           {/* Badges */}
           <View style={styles.badgesRow}>
-            <View style={styles.badgeItem}>
-              <RotateCcw size={28} color={colors.textSecondary} style={{ marginBottom: 8 }} />
-              <Text style={styles.badgeText}>3 Days Exchange</Text>
+            <View style={[styles.badgeItem, { backgroundColor: '#F0FDF4', borderColor: '#DCFCE7' }]}>
+              <RotateCcw size={24} color="#15803D" style={{ marginBottom: 8 }} />
+              <Text style={[styles.badgeText, { color: '#166534' }]}>3 Days Exchange</Text>
             </View>
-            <View style={styles.badgeItem}>
-              <Zap size={28} color={colors.textSecondary} style={{ marginBottom: 8 }} />
-              <Text style={styles.badgeText}>Fast Delivery</Text>
+            <View style={[styles.badgeItem, { backgroundColor: '#FEF9C3', borderColor: '#FEF08A' }]}>
+              <Zap size={24} color="#A16207" style={{ marginBottom: 8 }} />
+              <Text style={[styles.badgeText, { color: '#854D0E' }]}>Fast Delivery</Text>
             </View>
           </View>
 
@@ -265,10 +269,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6', // Light gray background behind cards
   },
   imageSection: {
-    height: 420,
+    height: 340,
     width: '100%',
     position: 'relative',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  absoluteHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   header: {
     flexDirection: 'row',
@@ -291,10 +303,11 @@ const styles = StyleSheet.create({
     ...shadow.sm,
   },
   mainImageContainer: {
-    width: 260,
-    height: 260,
-    marginTop: 40,
+    width: 300,
+    height: 300,
     backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   mainImage: {
     width: '100%',
@@ -304,7 +317,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     position: 'absolute',
-    bottom: 30,
+    bottom: 12,
   },
   dot: {
     width: 6,

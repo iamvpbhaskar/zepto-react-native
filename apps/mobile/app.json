@@ -39,7 +39,7 @@
     ],
     "scheme": "zepto",
     "extra": {
-      "apiUrl": "http://localhost:3001/api/v1",
+      "apiUrl": "https://zepto-api-dev.loca.lt/api/v1",
       "eas": {
         "projectId": "44170767-8560-4f9b-9498-6955de94b9f5"
       }

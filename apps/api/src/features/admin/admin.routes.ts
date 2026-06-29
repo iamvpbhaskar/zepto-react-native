@@ -58,6 +58,46 @@ router.get('/stats', async (_req: AuthRequest, res: Response, next: NextFunction
   } catch (err) { next(err) }
 })
 
+// ─── DB TABLE STATS ──────────────────────────────────────
+
+router.get('/db-stats', async (_req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const [
+      users, addresses, categories, products,
+      carts, cartItems, orders, orderItems, orderTimeline,
+      wallets, walletTransactions, banners, coupons,
+      notifications, recentlyViewed,
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.address.count({ where: { isDeleted: false } }),
+      prisma.category.count(),
+      prisma.product.count(),
+      prisma.cart.count(),
+      prisma.cartItem.count(),
+      prisma.order.count(),
+      prisma.orderItem.count(),
+      prisma.orderTimeline.count(),
+      prisma.wallet.count(),
+      prisma.walletTransaction.count(),
+      prisma.banner.count(),
+      prisma.coupon.count(),
+      prisma.notification.count(),
+      prisma.recentlyViewed.count(),
+    ])
+
+    res.json({
+      success: true,
+      data: {
+        users, addresses, categories, products,
+        carts, cart_items: cartItems, orders, order_items: orderItems,
+        order_timeline: orderTimeline, wallets,
+        wallet_transactions: walletTransactions, banners, coupons,
+        notifications, recently_viewed: recentlyViewed,
+      },
+    })
+  } catch (err) { next(err) }
+})
+
 // ─── PRODUCTS ────────────────────────────────────────────
 
 const productQuerySchema = z.object({

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { loadStoredToken, clearAuthToken } from '@/lib/api'
 import {
   LayoutDashboard, ShoppingBag, Tag, ClipboardList,
-  Users, Wallet, BarChart2, LogOut, Menu, X, Zap
+  Users, Wallet, BarChart2, LogOut, Menu, X, Zap, Database
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/dashboard/customers', label: 'Customers', icon: Users },
   { href: '/dashboard/wallet', label: 'Wallet', icon: Wallet },
   { href: '/dashboard/reports', label: 'Reports', icon: BarChart2 },
+  { href: '/dashboard/database', label: 'Database', icon: Database },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

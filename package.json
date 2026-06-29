@@ -26,8 +26,12 @@
   "packageManager": "npm@10.8.2",
   "dependencies": {
     "ajv": "^8.20.0",
-    "react-native-svg": "^15.15.5",
+    "pg": "^8.22.0",
     "react-native-reanimated": "~4.1.1",
-    "react-native-worklets": "^0.5.1"
+    "react-native-svg": "^15.15.5",
+    "react-native-worklets": "0.5.1"
+  },
+  "overrides": {
+    "react-native-worklets": "0.5.1"
   }
 }

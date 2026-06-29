@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zepto DB Schema — ER Diagram</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0d0f17;
+      --surface: #161926;
+      --surface2: #1e2235;
+      --border: #252b42;
+      --border-hover: #3a4260;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --accent-blue: #6366f1;
+      --accent-green: #10b981;
+      --accent-purple: #a855f7;
+      --accent-pink: #ec4899;
+      --accent-orange: #f59e0b;
+      --accent-teal: #14b8a6;
+      --accent-red: #ef4444;
+      --accent-sky: #0ea5e9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(13,15,23,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      z-index: 1000;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 15px; color: #fff;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(99,102,241,0.2);
+      color: #818cf8;
+      border: 1px solid rgba(99,102,241,0.3);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .header-stats {
+      margin-left: auto;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .stat-pill {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .stat-pill strong { color: var(--text); font-weight: 600; }
+    .stat-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+
+    /* ── Controls ── */
+    #controls {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px;
+      z-index: 1000;
+    }
+    .ctrl-btn {
+      width: 40px; height: 40px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover {
+      background: var(--border);
+      border-color: var(--border-hover);
+      transform: scale(1.05);
+    }
+
+    /* ── Legend ── */
+    #legend {
+      position: fixed;
+      bottom: 24px; left: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      z-index: 1000;
+      min-width: 200px;
+    }
+    #legend h4 {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--text-dim);
+      margin-bottom: 5px;
+    }
+    .legend-color {
+      width: 10px; height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .legend-line {
+      width: 20px; height: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Hint ── */
+    #hint {
+      position: fixed;
+      top: 68px; right: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 1000;
+      line-height: 1.7;
+    }
+    #hint kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    /* ── Canvas ── */
+    #canvas-container {
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      cursor: grab;
+      position: relative;
+    }
+    #canvas-container.grabbing { cursor: grabbing; }
+    #canvas {
+      position: absolute;
+      transform-origin: 0 0;
+    }
+    svg#lines {
+      position: absolute;
+      top: 0; left: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Table Cards ── */
+    .table-card {
+      position: absolute;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      min-width: 230px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 0 transparent;
+      transition: border-color 0.25s, box-shadow 0.25s, transform 0.15s;
+      cursor: default;
+    }
+    .table-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px rgba(99,102,241,0.12);
+      transform: translateY(-2px);
+      z-index: 10 !important;
+    }
+    .table-card.highlighted {
+      border-color: var(--accent-blue) !important;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2), 0 16px 48px rgba(0,0,0,0.5) !important;
+    }
+
+    .card-header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.2px;
+    }
+    .card-table-name {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 1px;
+    }
+    .card-badge {
+      margin-left: auto;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-fields {
+      padding: 6px 0;
+    }
+    .field-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 14px;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .field-row:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    .field-key {
+      width: 14px;
+      font-size: 9px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .field-name {
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      flex: 1;
+      font-weight: 500;
+    }
+    .field-name.pk { color: #fbbf24; }
+    .field-name.fk { color: #a78bfa; }
+    .field-type {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .field-optional {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .field-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 14px;
+      opacity: 0.5;
+    }
+
+    /* ── SVG Lines ── */
+    .rel-line {
+      stroke-width: 1.5;
+      fill: none;
+      stroke-dasharray: 0;
+      stroke-linecap: round;
+      opacity: 0.5;
+      transition: opacity 0.2s, stroke-width 0.2s;
+    }
+    .rel-line:hover, .rel-line.active {
+      opacity: 1;
+      stroke-width: 2.5;
+    }
+    .rel-arrow { fill: none; }
+
+    /* ── Enum Tags ── */
+    .enum-card {
+      position: absolute;
+      background: rgba(168,85,247,0.08);
+      border: 1px dashed rgba(168,85,247,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-width: 140px;
+    }
+    .enum-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a855f7;
+      margin-bottom: 6px;
+    }
+    .enum-value {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #c4b5fd;
+      line-height: 1.8;
+    }
+
+    /* ── Grid background ── */
+    #canvas-container::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    Zepto DB Schema
+  </div>
+  <span class="badge">PostgreSQL · Prisma</span>
+  <div class="header-stats">
+    <div class="stat-pill"><span class="stat-dot" style="background:#6366f1"></span><strong>10</strong>&nbsp;models</div>
+    <div class="stat-pill"><span class="stat-dot" style="background:#10b981"></span><strong>5</strong>&nbsp;enums</div>
+    <div class="stat-pill"><span class="stat-dot" style="background:#f59e0b"></span><strong>16</strong>&nbsp;relations</div>
+    <div class="stat-pill"><span class="stat-dot" style="background:#a855f7"></span>Supabase cloud</div>
+  </div>
+</div>
+
+<!-- Hint -->
+<div id="hint">
+  <kbd>Scroll</kbd> zoom &nbsp;·&nbsp; <kbd>Drag</kbd> pan &nbsp;·&nbsp; <kbd>R</kbd> reset
+</div>
+
+<!-- Controls -->
+<div id="controls">
+  <button class="ctrl-btn" id="zoom-in" title="Zoom In">＋</button>
+  <button class="ctrl-btn" id="zoom-out" title="Zoom Out">－</button>
+  <button class="ctrl-btn" id="reset-view" title="Reset View">⊙</button>
+</div>
+
+<!-- Legend -->
+<div id="legend">
+  <h4>Legend</h4>
+  <div class="legend-item"><div class="legend-color" style="background:#fbbf24"></div> Primary Key (PK)</div>
+  <div class="legend-item"><div class="legend-color" style="background:#a78bfa"></div> Foreign Key (FK)</div>
+  <div class="legend-item"><div class="legend-color" style="background:#94a3b8"></div> Regular field</div>
+  <div class="legend-item" style="margin-top:6px"><div class="legend-line" style="background:#6366f1"></div> 1-to-1</div>
+  <div class="legend-item"><div class="legend-line" style="background:#10b981; border-top: 2px dashed #10b981; background:transparent"></div> 1-to-many</div>
+</div>
+
+<!-- Canvas -->
+<div id="canvas-container">
+  <div id="canvas">
+    <svg id="lines" width="6000" height="5000"></svg>
+    <!-- cards injected here -->
+  </div>
+</div>
+
+<script>
+// ── Schema data ─────────────────────────────────────────────
+const SCHEMA = {
+  models: [
+    {
+      name: 'User', table: 'users', color: '#6366f1', icon: '👤',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'phone', type: 'String', unique: true },
+        { name: 'email', type: 'String?', optional: true },
+        { name: 'name', type: 'String?', optional: true },
+        { name: 'avatarUrl', type: 'String?', optional: true },
+        { name: 'role', type: 'Role', enum: true },
+        { name: 'isVerified', type: 'Boolean' },
+        { name: 'refreshToken', type: 'String?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      relations: ['Address[]', 'Order[]', 'Cart?', 'Wallet?', 'Notification[]', 'RecentlyViewed[]'],
+      pos: { x: 60, y: 80 }
+    },
+    {
+      name: 'Address', table: 'addresses', color: '#10b981', icon: '📍',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'userId', type: 'String', fk: true },
+        { name: 'label', type: 'String' },
+        { name: 'type', type: 'AddressType', enum: true },
+        { name: 'line1', type: 'String' },
+        { name: 'line2', type: 'String?', optional: true },
+        { name: 'city', type: 'String' },
+        { name: 'state', type: 'String' },
+        { name: 'pincode', type: 'String' },
+        { name: 'landmark', type: 'String?', optional: true },
+        { name: 'lat', type: 'Float?', optional: true },
+        { name: 'lng', type: 'Float?', optional: true },
+        { name: 'isDefault', type: 'Boolean' },
+        { name: 'isDeleted', type: 'Boolean' },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 60, y: 640 }
+    },
+    {
+      name: 'Category', table: 'categories', color: '#f59e0b', icon: '🗂️',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'name', type: 'String', unique: true },
+        { name: 'slug', type: 'String', unique: true },
+        { name: 'imageUrl', type: 'String?', optional: true },
+        { name: 'description', type: 'String?', optional: true },
+        { name: 'isActive', type: 'Boolean' },
+        { name: 'sortOrder', type: 'Int' },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 820, y: 80 }
+    },
+    {
+      name: 'Product', table: 'products', color: '#ec4899', icon: '📦',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'categoryId', type: 'String', fk: true },
+        { name: 'name', type: 'String' },
+        { name: 'slug', type: 'String', unique: true },
+        { name: 'description', type: 'String?', optional: true },
+        { name: 'images', type: 'String[]' },
+        { name: 'mrp', type: 'Decimal' },
+        { name: 'price', type: 'Decimal' },
+        { name: 'unit', type: 'String' },
+        { name: 'stock', type: 'Int' },
+        { name: 'isActive', type: 'Boolean' },
+        { name: 'isFeatured', type: 'Boolean' },
+        { name: 'tags', type: 'String[]' },
+        { name: 'metadata', type: 'Json?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      pos: { x: 820, y: 400 }
+    },
+    {
+      name: 'Cart', table: 'carts', color: '#14b8a6', icon: '🛒',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'userId', type: 'String', fk: true, unique: true },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      pos: { x: 440, y: 920 }
+    },
+    {
+      name: 'CartItem', table: 'cart_items', color: '#0ea5e9', icon: '🔖',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'cartId', type: 'String', fk: true },
+        { name: 'productId', type: 'String', fk: true },
+        { name: 'quantity', type: 'Int' },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      pos: { x: 820, y: 920 }
+    },
+    {
+      name: 'Order', table: 'orders', color: '#f97316', icon: '📋',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'orderNumber', type: 'String', unique: true },
+        { name: 'userId', type: 'String', fk: true },
+        { name: 'addressId', type: 'String', fk: true },
+        { name: 'status', type: 'OrderStatus', enum: true },
+        { name: 'paymentMethod', type: 'PaymentMethod', enum: true },
+        { name: 'subtotal', type: 'Decimal' },
+        { name: 'deliveryFee', type: 'Decimal' },
+        { name: 'discount', type: 'Decimal' },
+        { name: 'total', type: 'Decimal' },
+        { name: 'couponCode', type: 'String?', optional: true },
+        { name: 'notes', type: 'String?', optional: true },
+        { name: 'estimatedAt', type: 'DateTime?', optional: true },
+        { name: 'deliveredAt', type: 'DateTime?', optional: true },
+        { name: 'cancelledAt', type: 'DateTime?', optional: true },
+        { name: 'cancelReason', type: 'String?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      pos: { x: 60, y: 1160 }
+    },
+    {
+      name: 'OrderItem', table: 'order_items', color: '#ef4444', icon: '🧾',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'orderId', type: 'String', fk: true },
+        { name: 'productId', type: 'String', fk: true },
+        { name: 'productName', type: 'String' },
+        { name: 'productImage', type: 'String?', optional: true },
+        { name: 'unit', type: 'String' },
+        { name: 'quantity', type: 'Int' },
+        { name: 'mrp', type: 'Decimal' },
+        { name: 'price', type: 'Decimal' },
+        { name: 'total', type: 'Decimal' },
+      ],
+      pos: { x: 560, y: 1340 }
+    },
+    {
+      name: 'OrderTimeline', table: 'order_timeline', color: '#84cc16', icon: '📅',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'orderId', type: 'String', fk: true },
+        { name: 'status', type: 'OrderStatus', enum: true },
+        { name: 'message', type: 'String?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 60, y: 1600 }
+    },
+    {
+      name: 'Wallet', table: 'wallets', color: '#a855f7', icon: '💰',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'userId', type: 'String', fk: true, unique: true },
+        { name: 'balance', type: 'Decimal' },
+        { name: 'createdAt', type: 'DateTime' },
+        { name: 'updatedAt', type: 'DateTime' },
+      ],
+      pos: { x: 820, y: 1400 }
+    },
+    {
+      name: 'WalletTransaction', table: 'wallet_transactions', color: '#8b5cf6', icon: '💳',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'walletId', type: 'String', fk: true },
+        { name: 'orderId', type: 'String?', fk: true, optional: true, unique: true },
+        { name: 'type', type: 'TransactionType', enum: true },
+        { name: 'status', type: 'TransactionStatus', enum: true },
+        { name: 'amount', type: 'Decimal' },
+        { name: 'balanceBefore', type: 'Decimal' },
+        { name: 'balanceAfter', type: 'Decimal' },
+        { name: 'description', type: 'String' },
+        { name: 'reference', type: 'String?', optional: true },
+        { name: 'metadata', type: 'Json?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 1200, y: 1160 }
+    },
+    {
+      name: 'Banner', table: 'banners', color: '#06b6d4', icon: '🖼️',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'title', type: 'String' },
+        { name: 'imageUrl', type: 'String' },
+        { name: 'deepLink', type: 'String?', optional: true },
+        { name: 'isActive', type: 'Boolean' },
+        { name: 'sortOrder', type: 'Int' },
+        { name: 'startsAt', type: 'DateTime?', optional: true },
+        { name: 'endsAt', type: 'DateTime?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 1320, y: 80 }
+    },
+    {
+      name: 'Coupon', table: 'coupons', color: '#d97706', icon: '🎟️',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'code', type: 'String', unique: true },
+        { name: 'description', type: 'String' },
+        { name: 'discountType', type: 'String' },
+        { name: 'discountValue', type: 'Decimal' },
+        { name: 'minOrderValue', type: 'Decimal' },
+        { name: 'maxDiscount', type: 'Decimal?', optional: true },
+        { name: 'usageLimit', type: 'Int?', optional: true },
+        { name: 'usedCount', type: 'Int' },
+        { name: 'isActive', type: 'Boolean' },
+        { name: 'startsAt', type: 'DateTime?', optional: true },
+        { name: 'expiresAt', type: 'DateTime?', optional: true },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 1320, y: 420 }
+    },
+    {
+      name: 'Notification', table: 'notifications', color: '#f43f5e', icon: '🔔',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'userId', type: 'String', fk: true },
+        { name: 'title', type: 'String' },
+        { name: 'body', type: 'String' },
+        { name: 'type', type: 'String' },
+        { name: 'data', type: 'Json?', optional: true },
+        { name: 'isRead', type: 'Boolean' },
+        { name: 'createdAt', type: 'DateTime' },
+      ],
+      pos: { x: 440, y: 1760 }
+    },
+    {
+      name: 'RecentlyViewed', table: 'recently_viewed', color: '#64748b', icon: '👁️',
+      fields: [
+        { name: 'id', type: 'String', pk: true },
+        { name: 'userId', type: 'String', fk: true },
+        { name: 'productId', type: 'String', fk: true },
+        { name: 'viewedAt', type: 'DateTime' },
+      ],
+      pos: { x: 1200, y: 780 }
+    },
+  ],
+
+  enums: [
+    { name: 'Role', values: ['CUSTOMER', 'ADMIN'], pos: { x: 440, y: 80 } },
+    { name: 'OrderStatus', values: ['PENDING', 'CONFIRMED', 'PACKED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED', 'REFUNDED'], pos: { x: 440, y: 260 } },
+    { name: 'PaymentMethod', values: ['WALLET', 'COD'], pos: { x: 440, y: 560 } },
+    { name: 'TransactionType', values: ['CREDIT', 'DEBIT', 'REFUND'], pos: { x: 440, y: 680 } },
+    { name: 'TransactionStatus', values: ['PENDING', 'SUCCESS', 'FAILED'], pos: { x: 440, y: 810 } },
+    { name: 'AddressType', values: ['HOME', 'WORK', 'OTHER'], pos: { x: 440, y: 480 } },
+  ],
+
+  relations: [
+    // User relations
+    { from: 'User', to: 'Address', type: '1:N', color: '#6366f1' },
+    { from: 'User', to: 'Order', type: '1:N', color: '#6366f1' },
+    { from: 'User', to: 'Cart', type: '1:1', color: '#6366f1' },
+    { from: 'User', to: 'Wallet', type: '1:1', color: '#6366f1' },
+    { from: 'User', to: 'Notification', type: '1:N', color: '#6366f1' },
+    { from: 'User', to: 'RecentlyViewed', type: '1:N', color: '#6366f1' },
+    // Category
+    { from: 'Category', to: 'Product', type: '1:N', color: '#f59e0b' },
+    // Product
+    { from: 'Product', to: 'CartItem', type: '1:N', color: '#ec4899' },
+    { from: 'Product', to: 'OrderItem', type: '1:N', color: '#ec4899' },
+    { from: 'Product', to: 'RecentlyViewed', type: '1:N', color: '#ec4899' },
+    // Cart
+    { from: 'Cart', to: 'CartItem', type: '1:N', color: '#14b8a6' },
+    // Order
+    { from: 'Order', to: 'OrderItem', type: '1:N', color: '#f97316' },
+    { from: 'Order', to: 'OrderTimeline', type: '1:N', color: '#f97316' },
+    { from: 'Order', to: 'WalletTransaction', type: '1:1', color: '#f97316' },
+    { from: 'Address', to: 'Order', type: '1:N', color: '#10b981' },
+    // Wallet
+    { from: 'Wallet', to: 'WalletTransaction', type: '1:N', color: '#a855f7' },
+  ]
+}
+
+// ── Render ───────────────────────────────────────────────────
+const canvas = document.getElementById('canvas')
+const svgEl = document.getElementById('lines')
+const container = document.getElementById('canvas-container')
+
+const cardEls = {}
+const cardRects = {}
+
+function buildCard(model) {
+  const div = document.createElement('div')
+  div.className = 'table-card'
+  div.id = `card-${model.name}`
+  div.style.left = model.pos.x + 'px'
+  div.style.top = (model.pos.y + 56) + 'px'
+  div.style.zIndex = 5
+
+  // Header
+  const header = document.createElement('div')
+  header.className = 'card-header'
+  header.innerHTML = `
+    <div class="card-icon" style="background:${model.color}22; border:1px solid ${model.color}44">
+      <span style="font-size:13px">${model.icon}</span>
+    </div>
+    <div>
+      <div class="card-title" style="color:${model.color}">${model.name}</div>
+      <div class="card-table-name">${model.table}</div>
+    </div>
+    <span class="card-badge" style="background:${model.color}22; color:${model.color}; border:1px solid ${model.color}44">
+      ${model.fields.length}f
+    </span>
+  `
+  div.appendChild(header)
+
+  // Fields
+  const fields = document.createElement('div')
+  fields.className = 'card-fields'
+
+  model.fields.forEach((f, i) => {
+    if (i === 1) {
+      // divider after PK
+      const div2 = document.createElement('div')
+      div2.className = 'field-divider'
+      fields.appendChild(div2)
+    }
+    const row = document.createElement('div')
+    row.className = 'field-row'
+
+    let keyIcon = ''
+    let nameClass = 'field-name'
+    if (f.pk) { keyIcon = '<span style="color:#fbbf24;font-size:11px">🔑</span>'; nameClass = 'field-name pk' }
+    else if (f.fk) { keyIcon = '<span style="color:#a78bfa;font-size:11px">🔗</span>'; nameClass = 'field-name fk' }
+    else if (f.unique) { keyIcon = '<span style="color:#34d399;font-size:10px">◇</span>' }
+    else if (f.enum) { keyIcon = '<span style="color:#fb923c;font-size:10px">∷</span>' }
+    else { keyIcon = '<span style="color:#334155;font-size:10px">•</span>' }
+
+    row.innerHTML = `
+      <div class="field-key">${keyIcon}</div>
+      <div class="${nameClass}">${f.name}</div>
+      <div class="field-type">${f.type}</div>
+    `
+    fields.appendChild(row)
+  })
+  div.appendChild(fields)
+
+  return div
+}
+
+function buildEnum(en) {
+  const div = document.createElement('div')
+  div.className = 'enum-card'
+  div.style.left = en.pos.x + 'px'
+  div.style.top = (en.pos.y + 56) + 'px'
+  div.innerHTML = `
+    <div class="enum-title">enum · ${en.name}</div>
+    <div class="enum-value">${en.values.join('<br>')}</div>
+  `
+  return div
+}
+
+// Render all cards
+SCHEMA.models.forEach(m => {
+  const el = buildCard(m)
+  canvas.appendChild(el)
+  cardEls[m.name] = el
+})
+
+SCHEMA.enums.forEach(en => {
+  canvas.appendChild(buildEnum(en))
+})
+
+// ── Measure cards & draw lines ───────────────────────────────
+function getCardCenter(name) {
+  const el = cardEls[name]
+  const x = parseFloat(el.style.left)
+  const y = parseFloat(el.style.top)
+  const w = el.offsetWidth || 240
+  const h = el.offsetHeight || 200
+  return { x, y, w, h }
+}
+
+function drawLines() {
+  svgEl.innerHTML = ''
+  // Arrow marker
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+  SCHEMA.relations.forEach((rel, i) => {
+    const m = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+    m.setAttribute('id', `arrow-${i}`)
+    m.setAttribute('markerWidth', '8')
+    m.setAttribute('markerHeight', '8')
+    m.setAttribute('refX', '6')
+    m.setAttribute('refY', '3')
+    m.setAttribute('orient', 'auto')
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', 'M0,0 L0,6 L8,3 z')
+    path.setAttribute('fill', rel.color)
+    path.setAttribute('opacity', '0.7')
+    m.appendChild(path)
+    defs.appendChild(m)
+  })
+  svgEl.appendChild(defs)
+
+  SCHEMA.relations.forEach((rel, i) => {
+    const from = getCardCenter(rel.from)
+    const to = getCardCenter(rel.to)
+
+    // Find best edge pair
+    const fromCx = from.x + from.w / 2
+    const fromCy = from.y + from.h / 2
+    const toCx = to.x + to.w / 2
+    const toCy = to.y + to.h / 2
+
+    let x1, y1, x2, y2
+    const dx = toCx - fromCx
+    const dy = toCy - fromCy
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // horizontal
+      if (dx > 0) {
+        x1 = from.x + from.w; y1 = fromCy
+        x2 = to.x; y2 = toCy
+      } else {
+        x1 = from.x; y1 = fromCy
+        x2 = to.x + to.w; y2 = toCy
+      }
+    } else {
+      // vertical
+      if (dy > 0) {
+        x1 = fromCx; y1 = from.y + from.h
+        x2 = toCx; y2 = to.y
+      } else {
+        x1 = fromCx; y1 = from.y
+        x2 = toCx; y2 = to.y + to.h
+      }
+    }
+
+    // Bezier control points
+    const cpx1 = x1 + (x2 - x1) * 0.4
+    const cpy1 = y1
+    const cpx2 = x1 + (x2 - x1) * 0.6
+    const cpy2 = y2
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    path.setAttribute('d', `M${x1},${y1} C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`)
+    path.setAttribute('stroke', rel.color)
+    path.setAttribute('class', 'rel-line')
+    path.setAttribute('stroke-dasharray', rel.type === '1:1' ? '0' : '6 3')
+    path.setAttribute('marker-end', `url(#arrow-${i})`)
+    svgEl.appendChild(path)
+
+    // Label
+    const mx = (x1 + x2) / 2
+    const my = (y1 + y2) / 2
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    txt.setAttribute('x', mx)
+    txt.setAttribute('y', my - 5)
+    txt.setAttribute('text-anchor', 'middle')
+    txt.setAttribute('fill', rel.color)
+    txt.setAttribute('font-size', '10')
+    txt.setAttribute('font-family', 'JetBrains Mono, monospace')
+    txt.setAttribute('opacity', '0.7')
+    txt.textContent = rel.type
+    svgEl.appendChild(txt)
+  })
+}
+
+setTimeout(drawLines, 100)
+window.addEventListener('resize', drawLines)
+
+// ── Pan & Zoom ───────────────────────────────────────────────
+let scale = 0.6
+let tx = 40, ty = 20
+let isDragging = false
+let startX, startY, startTx, startTy
+
+function applyTransform() {
+  canvas.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`
+}
+applyTransform()
+
+container.addEventListener('wheel', e => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? 0.9 : 1.1
+  scale = Math.max(0.2, Math.min(2, scale * delta))
+  applyTransform()
+}, { passive: false })
+
+container.addEventListener('mousedown', e => {
+  if (e.button !== 0) return
+  isDragging = true
+  startX = e.clientX; startY = e.clientY
+  startTx = tx; startTy = ty
+  container.classList.add('grabbing')
+})
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return
+  tx = startTx + (e.clientX - startX)
+  ty = startTy + (e.clientY - startY)
+  applyTransform()
+})
+window.addEventListener('mouseup', () => {
+  isDragging = false
+  container.classList.remove('grabbing')
+})
+
+document.getElementById('zoom-in').addEventListener('click', () => {
+  scale = Math.min(2, scale * 1.2)
+  applyTransform()
+})
+document.getElementById('zoom-out').addEventListener('click', () => {
+  scale = Math.max(0.2, scale * 0.8)
+  applyTransform()
+})
+document.getElementById('reset-view').addEventListener('click', () => {
+  scale = 0.6; tx = 40; ty = 20
+  applyTransform()
+})
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') {
+    scale = 0.6; tx = 40; ty = 20
+    applyTransform()
+  }
+})
+
+// Touch support
+let lastTouchDist = null
+container.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    lastTouchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    )
+  } else if (e.touches.length === 1) {
+    isDragging = true
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY
+    startTx = tx; startTy = ty
+  }
+})
+container.addEventListener('touchmove', e => {
+  e.preventDefault()
+  if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    )
+    if (lastTouchDist) {
+      scale = Math.max(0.2, Math.min(2, scale * (d / lastTouchDist)))
+      applyTransform()
+    }
+    lastTouchDist = d
+  } else if (isDragging && e.touches.length === 1) {
+    tx = startTx + (e.touches[0].clientX - startX)
+    ty = startTy + (e.touches[0].clientY - startY)
+    applyTransform()
+  }
+}, { passive: false })
+container.addEventListener('touchend', () => {
+  isDragging = false
+  lastTouchDist = null
+})
+</script>
+</body>
+</html>
